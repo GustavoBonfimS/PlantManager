@@ -5,6 +5,7 @@ import { Welcome } from '../pages/Welcome';
 import { UserIdentification } from '../pages/UserIdentification';
 import { Confirmation } from '../pages/Confirmation';
 import { PlanSelect } from '../pages/PlantSelect';
+import { PlantSave } from '../pages/PlantSave';
 
 import colors from '../styles/colors';
 
@@ -34,6 +35,10 @@ const AppRoutes: React.FC = () => (
     <stackRoutes.Screen
       name="PlanSelect"
       component={PlanSelect}
+    />
+    <stackRoutes.Screen
+      name="PlantSave"
+      component={PlantSave}
     />
 
   </stackRoutes.Navigator>
