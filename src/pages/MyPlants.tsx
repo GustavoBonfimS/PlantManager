@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from "react";
-import { StyleSheet, View, Text, Image, FlatList } from "react-native";
-import { loadPlant, PlantProps } from "../libs/storage";
+import { StyleSheet, View, Text, Image, FlatList, Alert } from "react-native";
+import { loadPlant, PlantProps, removePlant } from "../libs/storage";
 import { formatDistance } from "date-fns";
 import { pt } from "date-fns/locale";
 
 import { PlantCardSecondary } from "../components/PlantCardSecondary";
 import { Header } from "../components/Header";
+import { Load } from "../components/Load";
 
 import colors from "../styles/colors";
 import waterdrop from "../assets/waterdrop.png";
@@ -16,10 +17,40 @@ export function MyPlants() {
   const [loading, setLoading] = useState(true);
   const [nextWatered, setNextWatered] = useState<string>();
 
+  function handleRemove(plant: PlantProps) {
+    Alert.alert("Remover", `Deseja remover a ${plant.name}?`, [
+      {
+        text: "Não 🙏",
+        style: "cancel",
+      },
+      {
+        text: "Sim 😥",
+        onPress: async () => {
+          try {
+            await removePlant(plant.id);
+
+            setMyPlants((oldValue) =>
+              oldValue.filter((item) => item.id !== plant.id)
+            );
+          } catch (err) {
+            console.log(err);
+
+            Alert.alert("Erro", "Não foi possível remover 😥");
+          }
+        },
+      },
+    ]);
+  }
+
   useEffect(() => {
-    async function loadStoragedData() {
-      setLoading(true);
+    async function loadStorageData() {
       const plantsStoraged = await loadPlant();
+      if (plantsStoraged.length === 0) {
+        setNextWatered('Você ainda não selecionou nenhuma plantinha 😊')
+        setMyPlants([]);
+        setLoading(false);
+        return;
+      }
 
       const nextTime = formatDistance(
         new Date(plantsStoraged[0].dateTimeNotification).getTime(),
@@ -34,8 +65,12 @@ export function MyPlants() {
       setMyPlants(plantsStoraged);
       setLoading(false);
     }
-    loadStoragedData();
+    loadStorageData();
   }, []);
+
+  if (loading) {
+    return <Load />;
+  }
 
   return (
     <View style={styles.container}>
@@ -53,7 +88,9 @@ export function MyPlants() {
         <FlatList
           data={myPlants}
           keyExtractor={(item) => String(item.id)}
-          renderItem={({ item }) => <PlantCardSecondary data={item} />}
+          renderItem={({ item }) => (
+            <PlantCardSecondary data={item} handleRemove={() => handleRemove(item)} />
+          )}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{ flex: 1 }}
         />
